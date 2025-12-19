@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Интерактивный прототип - Автоматическая выдача товара</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f7;
+            color: #1d1d1f;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .screen {
+            display: none;
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #e5e5e7;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: #007aff;
+        }
+
+        .nav {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav a {
+            text-decoration: none;
+            color: #1d1d1f;
+            font-size: 16px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .nav a:hover {
+            color: #007aff;
+        }
+
+        .screen-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #1d1d1f;
+        }
+
+        .screen-description {
+            font-size: 18px;
+            color: #86868b;
+            margin-bottom: 40px;
+        }
+
+        .catalog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .product-card {
+            background: white;
+            border: 1px solid #e5e5e7;
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+
+        .product-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #007aff 0%, #5856d6 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            margin-bottom: 16px;
+        }
+
+        .product-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .product-description {
+            font-size: 14px;
+            color: #86868b;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+
+        .product-price {
+            font-size: 24px;
+            font-weight: 700;
+            color: #007aff;
+            margin-bottom: 16px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #007aff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0051d5;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .product-detail {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .detail-header {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .detail-image {
+            width: 400px;
+            height: 400px;
+            background: linear-gradient(135deg, #007aff 0%, #5856d6 100%);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 120px;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 900px) {
+            .detail-image {
+                width: 100%;
+                max-width: 400px;
+            }
+        }
+
+        .detail-info {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .detail-title {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .detail-price {
+            font-size: 36px;
+            font-weight: 700;
+            color: #007aff;
+            margin-bottom: 24px;
+        }
+
+        .detail-features {
+            list-style: none;
+            margin-bottom: 40px;
+        }
+
+        .detail-features li {
+            padding: 12px 0;
+            font-size: 18px;
+            border-bottom: 1px solid #e5e5e7;
+        }
+
+        .detail-features li:before {
+            content: "✓ ";
+            color: #34c759;
+            font-weight: 700;
+            margin-right: 8px;
+        }
+
+        .payment-form {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 24px;
+            border: 1px solid #e5e5e7;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 16px;
+            border: 1px solid #e5e5e7;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #007aff;
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+        }
+
+        .success-screen {
+            text-align: center;
+            padding: 80px 40px;
+        }
+
+        .success-icon {
+            width: 120px;
+            height: 120px;
+            background: #34c759;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            margin: 0 auto 40px;
+            color: white;
+            animation: scaleIn 0.5s ease-out;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+            }
+            to {
+                transform: scale(1);
+            }
+        }
+
+        .success-title {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: #1d1d1f;
+        }
+
+        .success-subtitle {
+            font-size: 24px;
+            color: #86868b;
+            margin-bottom: 60px;
+        }
+
+        .delivery-badge {
+            display: inline-block;
+            background: #34c759;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 24px;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 40px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.8;
+            }
+        }
+
+        .credentials-box {
+            max-width: 800px;
+            margin: 40px auto;
+            background: #f5f5f7;
+            border-radius: 16px;
+            padding: 40px;
+            border: 2px solid #007aff;
+        }
+
+        .credentials-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+
+        .credential-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .credential-label {
+            font-weight: 600;
+            color: #86868b;
+        }
+
+        .credential-value {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            color: #1d1d1f;
+            word-break: break-all;
+        }
+
+        .copy-btn {
+            background: #007aff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: #0051d5;
+        }
+
+        .auto-delivery-indicator {
+            background: linear-gradient(135deg, #34c759 0%, #30d158 100%);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 30px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .auto-delivery-indicator::before {
+            content: "⚡";
+            font-size: 24px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e5e5e7;
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 40px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #007aff 0%, #5856d6 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-fill.active {
+            animation: progress 2s ease-out forwards;
+        }
+
+        @keyframes progress {
+            to {
+                width: 100%;
+            }
+        }
+
+        .timer {
+            font-size: 14px;
+            color: #86868b;
+            margin-top: 16px;
+        }
+
+        .highlight-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 30px 0;
+        }
+
+        .highlight-box strong {
+            display: block;
+            margin-bottom: 8px;
+            color: #856404;
+        }
+
+        .flow-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            font-size: 14px;
+            z-index: 1000;
+        }
+
+        .flow-step {
+            padding: 4px 0;
+            color: #86868b;
+        }
+
+        .flow-step.active {
+            color: #007aff;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="flow-indicator">
+        <div>Flow взаимодействия:</div>
+        <div class="flow-step" id="flow-1">1. Каталог</div>
+        <div class="flow-step" id="flow-2">2. Карточка товара</div>
+        <div class="flow-step" id="flow-3">3. Оплата</div>
+        <div class="flow-step" id="flow-4">4. Обработка</div>
+        <div class="flow-step" id="flow-5">5. Выдача товара</div>
+    </div>
+
+    <div class="container">
+        <!-- ЭКРАН 1: Каталог товаров -->
+        <div class="screen active" id="screen-1">
+            <div class="header">
+                <div class="logo">DigitalMarket - Прототип для курса Product Master by Zharmukhambetov Temirlan Batch 14 (Вариант Тестовый)</div>
+                <nav class="nav">
+                    <a href="#">Каталог</a>
+                    <a href="#">Помощь</a>
+                    <a href="#">Контакты</a>
+                </nav>
+            </div>
+            <h1 class="screen-title">Каталог товаров</h1>
+            <p class="screen-description">Выберите товар из каталога</p>
+
+            <div class="auto-delivery-indicator">
+                Мгновенная автоматическая выдача после оплаты
+            </div>
+
+            <div class="catalog-grid">
+                <div class="product-card" onclick="goToScreen(2)">
+                    <div class="product-icon">🎮</div>
+                    <div class="product-title">Игровой аккаунт</div>
+                    <div class="product-description">Premium аккаунт с высоким уровнем и предметами</div>
+                    <div class="product-price">2 490 ₽</div>
+                    <button class="btn btn-primary">Выбрать</button>
+                </div>
+                <div class="product-card" onclick="goToScreen(2)">
+                    <div class="product-icon">📱</div>
+                    <div class="product-title">Аккаунт соц. сети</div>
+                    <div class="product-description">Верифицированный аккаунт с подписчиками</div>
+                    <div class="product-price">1 990 ₽</div>
+                    <button class="btn btn-primary">Выбрать</button>
+                </div>
+                <div class="product-card" onclick="goToScreen(2)">
+                    <div class="product-icon">💎</div>
+                    <div class="product-title">Игровая валюта</div>
+                    <div class="product-description">Большой пакет внутриигровой валюты</div>
+                    <div class="product-price">999 ₽</div>
+                    <button class="btn btn-primary">Выбрать</button>
+                </div>
+                <div class="product-card" onclick="goToScreen(2)">
+                    <div class="product-icon">🔑</div>
+                    <div class="product-title">Цифровой ключ</div>
+                    <div class="product-description">Лицензионный ключ активации игры</div>
+                    <div class="product-price">1 499 ₽</div>
+                    <button class="btn btn-primary">Выбрать</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ЭКРАН 2: Карточка товара -->
+        <div class="screen" id="screen-2">
+            <div class="header">
+                <div class="logo">DigitalMarket - Прототип для курса Product Master by Zharmukhambetov Temirlan Batch 14 (Вариант Тестовый)</div>
+                <nav class="nav">
+                    <a onclick="goToScreen(1)">← Назад к каталогу</a>
+                </nav>
+            </div>
+            <h1 class="screen-title">Детали товара</h1>
+            <p class="screen-description">Подробная информация о выбранном товаре</p>
+
+            <div class="product-detail">
+                <div class="auto-delivery-indicator">
+                    ⚡ Товар будет автоматически выдан сразу после оплаты (обычно менее 30 секунд)
+                </div>
+
+                <div class="detail-header">
+                    <div class="detail-image">🎮</div>
+                    <div class="detail-info">
+                        <h2 class="detail-title">Игровой аккаунт Premium</h2>
+                        <div class="detail-price">2 490 ₽</div>
+                        <ul class="detail-features">
+                            <li>Уровень 100+ с полным прохождением</li>
+                            <li>Редкие предметы и коллекции</li>
+                            <li>Множество внутриигровой валюты</li>
+                            <li>Доступ к эксклюзивному контенту</li>
+                            <li>Гарантия безопасности аккаунта</li>
+                        </ul>
+                        <button class="btn btn-primary" onclick="goToScreen(3)" style="max-width: 400px; font-size: 20px; padding: 18px 32px;">
+                            Купить сейчас
+                        </button>
+                        <div class="highlight-box">
+                            <strong>💡 Почему это важно:</strong>
+                            Автоматическая выдача означает, что вы получите доступ к товару мгновенно после оплаты, 
+                            без ожидания подтверждения от продавца. Это экономит ваше время и создаёт ощущение надёжности сервиса.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ЭКРАН 3: Процесс оплаты -->
+        <div class="screen" id="screen-3">
+            <div class="header">
+                <div class="logo">DigitalMarket - Прототип для курса Product Master by Zharmukhambetov Temirlan Batch 14 (Вариант Тестовый)</div>
+                <nav class="nav">
+                    <a onclick="goToScreen(2)">← Назад</a>
+                </nav>
+            </div>
+            <h1 class="screen-title">Оплата</h1>
+            <p class="screen-description">Форма оплаты с индикацией автоматической выдачи</p>
+
+            <div class="payment-form">
+                <div class="auto-delivery-indicator">
+                    ⚡ После успешной оплаты товар будет автоматически выдан
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Email для получения данных</label>
+                    <input type="email" class="form-input" value="user@example.com" placeholder="your@email.com">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Номер карты</label>
+                    <input type="text" class="form-input" value="4532 1234 5678 9010" placeholder="0000 0000 0000 0000">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label">Срок действия</label>
+                        <input type="text" class="form-input" value="12/25" placeholder="MM/YY">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">CVV</label>
+                        <input type="text" class="form-input" value="123" placeholder="000">
+                    </div>
+                </div>
+
+                <div style="margin: 30px 0; padding: 20px; background: #f5f5f7; border-radius: 12px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span>Товар:</span>
+                        <span style="font-weight: 600;">Игровой аккаунт Premium</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 24px; font-weight: 700; margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e5e7;">
+                        <span>Итого:</span>
+                        <span style="color: #007aff;">2 490 ₽</span>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="processPayment()" style="font-size: 18px; padding: 18px;">
+                    Оплатить 2 490 ₽
+                </button>
+
+                <div class="timer" style="text-align: center; margin-top: 20px;">
+                    После оплаты выдача произойдёт автоматически в течение 30 секунд
+                </div>
+            </div>
+        </div>
+
+        <!-- ЭКРАН 4: Успешная оплата с прогрессом выдачи -->
+        <div class="screen" id="screen-4">
+            <div class="header">
+                <div class="logo">DigitalMarket - Прототип для курса Product Master by Zharmukhambetov Temirlan Batch 14 (Вариант Тестовый)</div>
+            </div>
+            <h1 class="screen-title">Обработка оплаты</h1>
+            <p class="screen-description">Мгновенный переход к автоматической выдаче товара</p>
+
+            <div class="success-screen">
+                <div class="success-icon">✓</div>
+                <h2 class="success-title">Оплата успешно выполнена!</h2>
+                <p class="success-subtitle">Запускаем автоматическую выдачу товара...</p>
+
+                <div style="max-width: 600px; margin: 0 auto;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-bar"></div>
+                    </div>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <div class="delivery-badge">Автоматическая выдача активирована</div>
+                        <p style="font-size: 18px; color: #86868b; margin-top: 20px;">
+                            Подготовка данных товара... Обычно это занимает 10-30 секунд
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ЭКРАН 5: Товар успешно выдан -->
+        <div class="screen" id="screen-5">
+            <div class="header">
+                <div class="logo">DigitalMarket - Прототип для курса Product Master by Zharmukhambetov Temirlan Batch 14 (Вариант Тестовый)</div>
+                <nav class="nav">
+                    <a onclick="goToScreen(1)">Вернуться в каталог</a>
+                </nav>
+            </div>
+            <h1 class="screen-title">Товар автоматически выдан</h1>
+            <p class="screen-description">Пользователь получает доступ к данным сразу после оплаты</p>
+
+            <div class="success-screen">
+                <div class="success-icon">🎉</div>
+                <h2 class="success-title">Товар успешно выдан!</h2>
+                <p class="success-subtitle">Ваши данные готовы к использованию</p>
+
+                <div class="delivery-badge">Выдано автоматически за 15 секунд</div>
+
+                <div class="credentials-box">
+                    <h3 class="credentials-title">Данные доступа к игровому аккаунту</h3>
+                    
+                    <div class="credential-item">
+                        <span class="credential-label">Логин:</span>
+                        <span style="display: flex; align-items: center; gap: 12px;">
+                            <span class="credential-value">gamer_pro_2024</span>
+                            <button class="copy-btn" onclick="copyToClipboard('gamer_pro_2024', this)">Копировать</button>
+                        </span>
+                    </div>
+
+                    <div class="credential-item">
+                        <span class="credential-label">Пароль:</span>
+                        <span style="display: flex; align-items: center; gap: 12px;">
+                            <span class="credential-value" id="password-value">••••••••••••</span>
+                            <button class="copy-btn" id="password-btn" onclick="togglePassword()">Показать</button>
+                        </span>
+                    </div>
+
+                    <div class="credential-item">
+                        <span class="credential-label">Email привязки:</span>
+                        <span style="display: flex; align-items: center; gap: 12px;">
+                            <span class="credential-value">account@example.com</span>
+                            <button class="copy-btn" onclick="copyToClipboard('account@example.com', this)">Копировать</button>
+                        </span>
+                    </div>
+
+                    <div class="credential-item">
+                        <span class="credential-label">Дополнительная информация:</span>
+                        <span class="credential-value">См. инструкцию в письме на email</span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 40px; padding: 24px; background: #e8f5e9; border-radius: 12px; max-width: 800px; margin-left: auto; margin-right: auto;">
+                    <p style="font-size: 16px; color: #2e7d32; line-height: 1.6;">
+                        <strong>✅ Преимущества автоматической выдачи:</strong><br>
+                        • Вы получили товар мгновенно, без ожидания<br>
+                        • Данные безопасно сохранены в вашем профиле<br>
+                        • Дополнительная информация отправлена на email<br>
+                        • Круглосуточная поддержка доступна при необходимости
+                    </p>
+                </div>
+
+                <button class="btn btn-primary" onclick="goToScreen(1)" style="max-width: 300px; margin: 40px auto 0; display: block; font-size: 18px; padding: 18px;">
+                    Вернуться в каталог
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function goToScreen(screenNumber) {
+            const screens = document.querySelectorAll('.screen');
+            screens.forEach(screen => screen.classList.remove('active'));
+
+            const targetScreen = document.getElementById(`screen-${screenNumber}`);
+            if (targetScreen) {
+                targetScreen.classList.add('active');
+                targetScreen.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                
+                updateFlowIndicator(screenNumber);
+            }
+        }
+
+        function updateFlowIndicator(activeScreen) {
+            for (let i = 1; i <= 5; i++) {
+                const flowStep = document.getElementById(`flow-${i}`);
+                if (flowStep) {
+                    if (i === activeScreen) {
+                        flowStep.classList.add('active');
+                    } else {
+                        flowStep.classList.remove('active');
+                    }
+                }
+            }
+        }
+
+        function processPayment() {
+            goToScreen(4);
+            
+            setTimeout(() => {
+                const progressBar = document.getElementById('progress-bar');
+                if (progressBar) {
+                    progressBar.classList.add('active');
+                }
+            }, 100);
+
+            
+            setTimeout(() => {
+                goToScreen(5);
+            }, 2500);
+        }
+
+        
+        function copyToClipboard(text, button) {
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = button.textContent;
+                button.textContent = 'Скопировано!';
+                button.style.background = '#34c759';
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.background = '#007aff';
+                }, 2000);
+            }).catch(err => {
+                console.error('Ошибка копирования:', err);
+                alert('Не удалось скопировать. Скопируйте вручную: ' + text);
+            });
+        }
+
+        
+        function togglePassword() {
+            const passwordValue = document.getElementById('password-value');
+            const passwordBtn = document.getElementById('password-btn');
+            
+            if (passwordValue.textContent === '••••••••••••') {
+                passwordValue.textContent = 'P@ssw0rd2024!';
+                passwordBtn.textContent = 'Скрыть';
+                copyToClipboard('P@ssw0rd2024!', passwordBtn);
+            } else {
+                passwordValue.textContent = '••••••••••••';
+                passwordBtn.textContent = 'Показать';
+            }
+        }
+
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            updateFlowIndicator(1);
+        });
+
+        
+        window.addEventListener('scroll', () => {
+            
+        });
+    </script>
+</body>
+</html>
+
